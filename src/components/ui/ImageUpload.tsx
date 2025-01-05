@@ -7,27 +7,27 @@ interface ImageUploadProps {
 export default function ImageUpload({ onImageSelect }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+  const handleDragLeave = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
   };
 
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       const file = files[0];
-      if (isValidImageFile(file)) {
+      if (file.type.startsWith('image/')) {
         onImageSelect(file);
       } else {
-        alert('Please upload a valid image file (JPEG, PNG, or GIF)');
+        alert('Please upload an image file');
       }
     }
   };
@@ -36,64 +36,57 @@ export default function ImageUpload({ onImageSelect }: ImageUploadProps) {
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (isValidImageFile(file)) {
+      if (file.type.startsWith('image/')) {
         onImageSelect(file);
       } else {
-        alert('Please upload a valid image file (JPEG, PNG, or GIF)');
+        alert('Please upload an image file');
       }
     }
   };
 
-  const isValidImageFile = (file: File) => {
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    return validTypes.includes(file.type);
-  };
-
   return (
     <div
-      className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-        isDragging
-          ? 'border-blue-500 bg-blue-50'
-          : 'border-gray-300 hover:border-gray-400'
+      className={`relative border-2 border-dashed rounded-lg p-8 text-center ${
+        isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
       }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <div className="space-y-4">
-        <div className="flex items-center justify-center">
-          <svg
-            className="w-12 h-12 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-gray-900">
-          Drop your image here
-        </h3>
-        <p className="text-sm text-gray-500">or click to select a file</p>
-        <label className="relative">
-          <input
-            type="file"
-            className="sr-only"
-            accept="image/jpeg,image/png,image/gif"
-            onChange={handleFileSelect}
-          />
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+        id="file-upload"
+      />
+      <svg
+        className="mx-auto h-12 w-12 text-gray-400"
+        stroke="currentColor"
+        fill="none"
+        viewBox="0 0 48 48"
+        aria-hidden="true"
+      >
+        <path
+          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <div className="mt-4 space-y-2">
+        <label htmlFor="file-upload">
           <button
             type="button"
-            className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            onClick={() => document.getElementById('file-upload')?.click()}
           >
             Select Image
           </button>
         </label>
+        <p className="text-sm text-gray-500">
+          or drag and drop an image file
+        </p>
       </div>
     </div>
   );
