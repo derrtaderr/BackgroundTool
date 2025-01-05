@@ -3,7 +3,7 @@ import { pipeline } from '@xenova/transformers';
 export async function removeBackground(imageFile: File): Promise<string> {
   try {
     // Create a pipeline for image segmentation
-    const segmenter = await pipeline('image-segmentation', 'Xenova/detr-resnet-50-panoptic');
+    const segmenter = await pipeline('image-segmentation', 'Xenova/u2net');
 
     // Convert File to Image
     const image = await createImageFromFile(imageFile);
@@ -28,15 +28,25 @@ export async function removeBackground(imageFile: File): Promise<string> {
     const maskData = result.mask instanceof Float32Array 
       ? result.mask 
       : new Float32Array(Object.values(result.mask));
+
+    // Create a new ImageData for the result
+    const outputData = new Uint8ClampedArray(imageData.data.length);
     
-    // Apply the mask to create transparency
+    // Copy the original image data
     for (let i = 0; i < imageData.data.length; i += 4) {
+      outputData[i] = imageData.data[i];       // R
+      outputData[i + 1] = imageData.data[i + 1]; // G
+      outputData[i + 2] = imageData.data[i + 2]; // B
+      
+      // Apply the mask to the alpha channel
       const maskIndex = i / 4;
-      imageData.data[i + 3] = Math.round(maskData[maskIndex] * 255); // Alpha channel
+      // Invert the mask since U2Net outputs white for background
+      outputData[i + 3] = Math.round((1 - maskData[maskIndex]) * 255); // Alpha
     }
     
-    // Put the modified image data back
-    ctx.putImageData(imageData, 0, 0);
+    // Create new ImageData and put it back on the canvas
+    const outputImageData = new ImageData(outputData, canvas.width, canvas.height);
+    ctx.putImageData(outputImageData, 0, 0);
     
     // Convert to base64
     return canvas.toDataURL('image/png');
