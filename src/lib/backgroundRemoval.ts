@@ -2,8 +2,10 @@ import { pipeline } from '@xenova/transformers';
 
 export async function removeBackground(imageFile: File): Promise<string> {
   try {
-    // Create a pipeline for image segmentation
-    const segmenter = await pipeline('image-segmentation', 'Xenova/u2net');
+    // Create a pipeline for image segmentation using segment-anything
+    const segmenter = await pipeline('image-segmentation', 'Xenova/segment-anything-vit-b', {
+      quantized: true
+    });
 
     // Convert File to Image
     const image = await createImageFromFile(imageFile);
@@ -40,8 +42,8 @@ export async function removeBackground(imageFile: File): Promise<string> {
       
       // Apply the mask to the alpha channel
       const maskIndex = i / 4;
-      // Invert the mask since U2Net outputs white for background
-      outputData[i + 3] = Math.round((1 - maskData[maskIndex]) * 255); // Alpha
+      // For segment-anything, higher values indicate foreground
+      outputData[i + 3] = Math.round(maskData[maskIndex] * 255); // Alpha
     }
     
     // Create new ImageData and put it back on the canvas
